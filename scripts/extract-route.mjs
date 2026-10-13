@@ -78,9 +78,10 @@ const routeMeta = {
   stopCount: stops.length,
   uniquePlaceCount: new Set(stops.map(s => s.key)).size,
   defaultRouteMatches: matchesDefaults,
-  disclaimer: '路线为地点之间的游戏化示意连线。',
+  disclaimer: '路线依据路书缓存的真实公路轨迹呈现，地形为卡通表现。',
 };
 await mkdir(new URL('../dist/', import.meta.url), { recursive: true });
 await writeFile(new URL('../dist/route-data.js', import.meta.url),
   `// Generated from the roadbook by scripts/extract-route.mjs.\nexport const stops = ${JSON.stringify(stops, null, 2)};\n\nexport const routeMeta = ${JSON.stringify(routeMeta, null, 2)};\n`);
 console.log(`Exported ${stops.length} stops; default route matches: ${matchesDefaults}`);
+

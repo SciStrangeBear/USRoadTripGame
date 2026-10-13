@@ -370,5 +370,6 @@ export const routeMeta = {
   "stopCount": 36,
   "uniquePlaceCount": 35,
   "defaultRouteMatches": true,
-  "disclaimer": "路线为地点之间的游戏化示意连线。"
+  "disclaimer": "路线依据路书缓存的真实公路轨迹呈现，地形为卡通表现。"
 };
+
