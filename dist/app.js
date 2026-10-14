@@ -16,7 +16,9 @@ try {
   // Markers snap to the same road samples that drive the car.
   const roadStops=stops.map((s,i)=>({...s,...geometry.sample(geometry.stopDistances[i])}));
   const { createScene }=await import('./scene3d.js');
-  scene=createScene($('game-map'),{points:geometry.points,stops:roadStops});
+  const terrainResponse=await fetch('./terrain-data.json');
+  if(!terrainResponse.ok)throw Error('地形数据未能载入');
+  scene=createScene($('game-map'),{points:geometry.points,stops:roadStops,terrain:await terrainResponse.json()});
   $('scene-loading').hidden=true;
 } catch(error) {
   loadError=error.message;

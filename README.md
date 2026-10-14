@@ -27,7 +27,7 @@
 - `dist/app.js`：键盘、指针、动画和地点卡片。
 - `dist/index.html` / `dist/style.css`：响应式界面。
 
-路线来自原路书的 OSRM / OpenStreetMap 公路缓存，轻度简化后保留道路形状；不重新按站点画直线。场景地形、海拔和车辆比例是卡通表现，不代表真实高程或导航信息。当前版本不自动同步路书后续修改。
+路线来自原路书的 OSRM / OpenStreetMap 公路缓存，轻度简化后保留道路形状；不重新按站点画直线。地形来自公开海拔数据，经采样、平滑和适度纵向夸张后呈现山脉、高原与平原；车辆比例为卡通表现。当前版本不自动同步路书后续修改。
 
 Three.js 固定为 0.180.0，并随站点本地提供；许可见 `dist/vendor/THREE-LICENSE.txt`。运行时无需外部 CDN。参考 [Three.js 安装文档](https://threejs.org/manual/pages/installation.html)。
 
@@ -38,3 +38,10 @@ Three.js 固定为 0.180.0，并随站点本地提供；许可见 `dist/vendor/T
 ### 白色 XC60 模型
 
 车辆在 `dist/xc60.js` 中由原创 Three.js 几何体构成，采用 Q 版短胖比例；外观参考 [Volvo XC60 官方页面](https://www.volvocars.com/us/cars/xc60/)，并非精确工业模型。运行 `node tests/xc60-preview.mjs` 可生成游戏内及前后视角预览。
+
+
+### 海拔概化地形
+
+数据来自 [Mapzen / Tilezen Terrain Tiles（AWS Open Data）](https://registry.opendata.aws/terrain-tiles/)，于 2026-10-14 读取 zoom 5 的 Terrarium 瓦片。通过 0.25° 网格和一次 3×3 平滑保留大尺度地势，三角网约 2.2 万面；道路、车辆、地标和镜头复用同一地表高度。地表起伏采用每 55 米对应一个场景单位的表现比例，并非等比例测绘。
+
+`dist/terrain-data.json` 随站点本地发布；运行时不请求外部地形服务。`scripts/build-terrain.mjs` 可重生成数据；需要 pngjs，当前工作站使用 bundled runtime，其他环境可设置 PNGJS_MODULE。来源说明与许可见 [Tilezen attribution](https://github.com/tilezen/joerd/blob/master/docs/attribution.md)。陆地轮廓为简化示意，地形边界范围沿用游戏地图。
