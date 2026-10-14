@@ -1,5 +1,6 @@
 import * as THREE from './vendor/three.module.js';
 import { easeHeading } from './motion.js';
+import { createXC60 } from './xc60.js';
 
 const project = ([lon, lat]) => ({ x: 100 + (lon + 125) * 27, y: 75 + (50 - lat) * 28 });
 const coastline = [
@@ -128,21 +129,8 @@ export function createScene(container, { points, stops = [] }) {
     sprite.position.set(stop.x+12,22,stop.y);sprite.scale.set(24,24,1);scene.add(sprite);
   });
 
-  const car = new THREE.Group(); car.scale.setScalar(1.25); scene.add(car);
-  const coral = mat(0xef785d), dark = mat(0x354b50), glass = mat(0xa6d7dc, {metalness:.15,roughness:.3});
-  function box(w,h,d,material,x,y,z) {
-    const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);mesh.position.set(x,y,z);mesh.castShadow=true;car.add(mesh);return mesh;
-  }
-  box(15,4,8,coral,0,4,0);box(8,4,7,coral,-1,8,0);
-  box(.3,2.5,5.8,glass,3.1,8.4,0);box(.3,2.5,5.8,glass,-5.1,8.4,0);
-  box(5.8,2.5,.2,glass,-1,8.4,-3.55);box(5.8,2.5,.2,glass,-1,8.4,3.55);
-  box(1.2,1.3,1.6,mat(0xffefb5),7.55,4,-2.7);box(1.2,1.3,1.6,mat(0xffefb5),7.55,4,2.7);
-  box(.8,1,6.5,mat(0xe4e7da),8,2.8,0);box(.8,1,6.5,mat(0xe4e7da),-8,2.8,0);
-  const wheels=[];
-  for (const x of [-4.8,4.8]) for (const z of [-4.1,4.1]) {
-    const wheel=new THREE.Mesh(new THREE.CylinderGeometry(2.25,2.25,1.6,12),dark);
-    wheel.rotation.x=Math.PI/2;wheel.position.set(x,2.25,z);wheel.castShadow=true;car.add(wheel);wheels.push(wheel);
-  }
+  const {car,wheels,wheelRadius}=createXC60();
+  car.scale.setScalar(1.25);scene.add(car);
   car.position.set(points[0].x,.9,points[0].y);
   let mode='overview', disposed=false, yaw=0, polar=.69, radius=1150, dragging=false, lastX=0,lastY=0,lastDistance=null;
   let width=1,height=1;
@@ -188,14 +176,14 @@ export function createScene(container, { points, stops = [] }) {
       }
       if(Number.isFinite(state?.distance)){
         const delta=lastDistance===null?0:state.distance-lastDistance;
-        wheels.forEach(w=>w.rotateY(delta/2.25));lastDistance=state.distance;
+        wheels.forEach(w=>w.rotateZ(-delta/(wheelRadius*1.25)));lastDistance=state.distance;
       }
       positionCamera(firstFrame?0:Math.min(.1,Math.max(0,dt)));renderer.render(scene,camera);
     },
     resetMotion(){motionReady=false;lastDistance=null;},
     setCamera(next) {mode=next==='follow'?'follow':'overview';if(mode==='overview'){yaw=0;polar=.69;radius=1150;}positionCamera();renderer.render(scene,camera);},
     resize,
-    getInfo:()=>({renderer:'webgl',cameraMode:mode,car:{x:car.position.x,y:car.position.y,z:car.position.z,rotationY:car.rotation.y},pointsCount:points.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
+    getInfo:()=>({renderer:'webgl',cameraMode:mode,car:{x:car.position.x,y:car.position.y,z:car.position.z,rotationY:car.rotation.y},model:car.userData.model,pointsCount:points.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
     dispose() {
       if(disposed)return;disposed=true;observer.disconnect();
       canvas.removeEventListener('pointerdown',down);canvas.removeEventListener('pointermove',move);canvas.removeEventListener('pointerup',up);canvas.removeEventListener('pointercancel',up);canvas.removeEventListener('wheel',wheel);

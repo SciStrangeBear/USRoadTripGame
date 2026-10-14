@@ -34,3 +34,7 @@ Three.js 固定为 0.180.0，并随站点本地提供；许可见 `dist/vendor/T
 ## 多 Agent 协作
 
 主 Agent 负责界面、游戏整合与发布；路线 Agent 负责路书整理；地图 Agent 负责 SVG 视觉；QA Agent 独立实现测试和浏览器验收。各 Agent 写入不同文件，通过共享模块接口整合。
+
+### 白色 XC60 模型
+
+车辆在 `dist/xc60.js` 中由原创 Three.js 几何体构成，采用 Q 版短胖比例；外观参考 [Volvo XC60 官方页面](https://www.volvocars.com/us/cars/xc60/)，并非精确工业模型。运行 `node tests/xc60-preview.mjs` 可生成游戏内及前后视角预览。
