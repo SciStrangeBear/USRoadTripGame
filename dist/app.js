@@ -1,5 +1,6 @@
 import { stops as sourceStops } from './route-data.js';
 import { buildRoadGeometry } from './road-geometry.js';
+import { roadHeading } from './motion.js';
 import { createJourney, advance } from './engine.js';
 
 const $ = id => document.getElementById(id);
@@ -89,7 +90,7 @@ function frame(now){
   }
   if(scene){
     const distance=geometry.distanceAt(state.position);
-    scene.update({...geometry.sample(distance),distance,position:state.position,visited:[...state.visited]},dt);
+    scene.update({...geometry.sample(distance),angle:roadHeading(geometry,distance),distance,position:state.position,visited:[...state.visited]},dt);
   }
   requestAnimationFrame(frame);
 }
@@ -110,7 +111,7 @@ for(const [id,dir] of [['forward',1],['backward',-1]]){
   button.addEventListener('keyup',e=>{if(e.code==='Space'||e.code==='Enter'){e.preventDefault();clearInput();}});
   button.addEventListener('blur',clearInput);
 }
-$('reset').addEventListener('click',()=>{clearInput();state=createJourney(stops);pauseUntil=0;showPlace(0);render();});
+$('reset').addEventListener('click',()=>{clearInput();state=createJourney(stops);scene?.resetMotion();pauseUntil=0;showPlace(0);render();});
 $('open-route').addEventListener('click',()=>{
   clearInput();$('route-list').innerHTML=stops.map((s,i)=>`<li class="${state.visited.has(i)?'seen':''}"><span class="route-order">${String(i+1).padStart(2,'0')}</span><span>${s.icon}</span><span>${escape(s.name)}${i===last?'（返回）':''}</span></li>`).join('');$('route-dialog').showModal();
 });

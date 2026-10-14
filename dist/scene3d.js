@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three.module.js';
+import { easeHeading } from './motion.js';
 
 const project = ([lon, lat]) => ({ x: 100 + (lon + 125) * 27, y: 75 + (50 - lat) * 28 });
 const coastline = [
@@ -145,14 +146,15 @@ export function createScene(container, { points, stops = [] }) {
   car.position.set(points[0].x,.9,points[0].y);
   let mode='overview', disposed=false, yaw=0, polar=.69, radius=1150, dragging=false, lastX=0,lastY=0,lastDistance=null;
   let width=1,height=1;
+  let motionReady=false, cameraHeading=0;
   const overviewTarget=new THREE.Vector3(600,0,425), target=overviewTarget.clone();
   const desiredCamera=new THREE.Vector3();
   function positionCamera(dt=0) {
     if(mode==='follow') {
-      const a=-car.rotation.y;
-      target.set(car.position.x,6,car.position.z);
+      const a=-cameraHeading;
+      target.lerp(new THREE.Vector3(car.position.x,6,car.position.z),dt ? 1-Math.exp(-dt/.18) : 1);
       desiredCamera.set(car.position.x-Math.cos(a)*120,130,car.position.z-Math.sin(a)*120+65);
-      camera.position.lerp(desiredCamera,dt ? 1-Math.exp(-dt*5) : 1);
+      camera.position.lerp(desiredCamera,dt ? 1-Math.exp(-dt/ .38) : 1);
     } else {
       target.copy(overviewTarget);
       const effectiveRadius=radius*Math.max(1,1.35/(width/height));
@@ -177,13 +179,20 @@ export function createScene(container, { points, stops = [] }) {
     update(state,dt=0) {
       if(disposed)return;
       if(Number.isFinite(state?.x)&&Number.isFinite(state?.y))car.position.set(state.x,.9,state.y);
-      if(Number.isFinite(state?.angle))car.rotation.y=-state.angle*Math.PI/180;
+      const firstFrame=!motionReady;
+      if(Number.isFinite(state?.angle)){
+        const heading=-state.angle*Math.PI/180;
+        car.rotation.y=firstFrame?heading:easeHeading(car.rotation.y,heading,dt);
+        cameraHeading=firstFrame?heading:easeHeading(cameraHeading,car.rotation.y,dt,.75,.85);
+        motionReady=true;
+      }
       if(Number.isFinite(state?.distance)){
         const delta=lastDistance===null?0:state.distance-lastDistance;
         wheels.forEach(w=>w.rotateY(delta/2.25));lastDistance=state.distance;
       }
-      positionCamera(Math.min(.1,Math.max(0,dt)));renderer.render(scene,camera);
+      positionCamera(firstFrame?0:Math.min(.1,Math.max(0,dt)));renderer.render(scene,camera);
     },
+    resetMotion(){motionReady=false;lastDistance=null;},
     setCamera(next) {mode=next==='follow'?'follow':'overview';if(mode==='overview'){yaw=0;polar=.69;radius=1150;}positionCamera();renderer.render(scene,camera);},
     resize,
     getInfo:()=>({renderer:'webgl',cameraMode:mode,car:{x:car.position.x,y:car.position.y,z:car.position.z,rotationY:car.rotation.y},pointsCount:points.length,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles}),
